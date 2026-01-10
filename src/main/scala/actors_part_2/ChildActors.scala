@@ -158,7 +158,6 @@ object ChildActors {
     }
 
     def demoParentChild_v2(): Unit = {
-      import Parent_V2._
       val userGuardianBehavior: Behavior[Unit] = Behaviors.setup { context =>
         val parent = context.spawn(Parent_V2(), "parent")
         parent ! CreateChild("alice")
@@ -181,3 +180,4 @@ object ChildActors {
       demoParentChild()
     }
   }
+}
