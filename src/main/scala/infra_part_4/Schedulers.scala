@@ -7,6 +7,20 @@ import utils.ActorSystemEnhancements
 
 import scala.concurrent.duration.DurationInt
 
+/**
+ * Schedulers
+ * - Send a message at a certain time
+ * - Run an arbitrary computation at a time
+ * - Things to be careful with
+ * ---- If you schedule many arbitrary computations, use a dedicated ExecutionContext. Need to take care to not starve the actor system of threads.
+ * ---- Cancel schedules you are not using.
+ *
+ * Timers
+ * - Send message to yourself at a certain time
+ * - Manipulate the passage of time in tests
+ *
+ */
+
 object Schedulers {
 
   object LoggerActor {
@@ -64,23 +78,21 @@ object Schedulers {
       resettingTimeoutActor(context.scheduleOnce(1.second, context.self, "timeout"))
     }
 
-    def demoActorResettingTimeout(): Unit = {
-      def resettingTimeoutActor(schedule: Cancellable): Behavior[String] = Behaviors.receive { (context, message) =>
-        // start the scheduler
-        var schedule = context.scheduleOnce(1.second, context.self, "timeout")
+    def resettingTimeoutActor(schedule: Cancellable): Behavior[String] = Behaviors.receive { (context, message) =>
+      // start the scheduler
+      var schedule = context.scheduleOnce(1.second, context.self, "timeout")
 
-        message match {
-          case "timeout" =>
-            context.log.info("Stopping!")
-            Behaviors.stopped
-          case _ =>
-            context.log.info(s"Received: $message")
-            // reset scheduler
-            schedule.cancel()
-            // start another scheduler
-            resettingTimeoutActor(context.scheduleOnce(1.second, context.self, "timeout"))
-            Behaviors.same
-        }
+      message match {
+        case "timeout" =>
+          context.log.info("Stopping!")
+          Behaviors.stopped
+        case _ =>
+          context.log.info(s"Received: $message")
+          // reset scheduler
+          schedule.cancel()
+          // start another scheduler
+          resettingTimeoutActor(context.scheduleOnce(1.second, context.self, "timeout"))
+          Behaviors.same
       }
     }
   }
